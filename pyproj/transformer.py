@@ -17,7 +17,7 @@ from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from itertools import chain, islice
 from pathlib import Path
-from typing import Any, overload
+from typing import Any, Literal, overload
 
 from pyproj import CRS
 from pyproj._compat import cstrencode
@@ -163,7 +163,8 @@ class TransformerGroup(_TransformerGroup):
         accuracy: float | None = None,
         allow_ballpark: bool = True,
         allow_superseded: bool = False,
-        crs_extent_use: str | None = None,
+        crs_extent_use: Literal["none", "both", "intersection", "smallest"]
+        | None = None,
     ) -> None:
         """Get all possible transformations from a :obj:`pyproj.crs.CRS`
         or input used to create one.
