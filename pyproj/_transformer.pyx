@@ -204,7 +204,6 @@ cdef class _TransformerGroup:
                 operation_factory_context,
                 PROJ_SPATIAL_CRITERION_PARTIAL_INTERSECTION
             )
-            # optional CRS extent filtering (PROJ >= 9.2)
             if crs_extent_use is not None:
                 # Accept enum-like strings similar to PROJ CLI: none|both|intersection|smallest
                 if isinstance(crs_extent_use, str):
