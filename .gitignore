@@ -117,6 +117,3 @@ ENV/
 
 # vscode
 .vscode/
-
-# devcontainer configuration (local dev only)
-.devcontainer/
