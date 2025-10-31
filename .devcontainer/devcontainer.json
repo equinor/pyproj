@@ -1,0 +1,51 @@
+{
+  "name": "pyproj-dev",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": {
+      "VARIANT": "3.13"
+    }
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.13",
+      "installJupyterlab": true
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/scripts/post_create.sh",
+  "remoteEnv": {
+    "PIP_DISABLE_PIP_VERSION_CHECK": "1",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "runArgs": [
+    "--name", "pyproj-dev"
+  ],
+  "containerUser": "vscode",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff",
+        "ms-toolsai.jupyter",
+        "github.vscode-github-actions"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.testing.pytestEnabled": true,
+        "python.testing.unittestEnabled": false,
+        "python.testing.pytestArgs": ["-q"],
+        "python.formatting.provider": "none",
+        "ruff.organizeImports": true,
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+  "mounts": [
+    "source=pyproj-proj-data,target=/workspaces/pyproj/pyproj/proj_dir,type=volume"
+  ],
+  "forwardPorts": [],
+  "portsAttributes": {}
+
+}
