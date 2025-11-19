@@ -691,6 +691,43 @@
       "contributions": [
         "platform"
       ]
+    },
+    {
+      "login": "myl-dvl",
+      "name": "Mayeul DUVAL",
+      "avatar_url": "https://avatars.githubusercontent.com/u/208445693?v=4",
+      "profile": "https://github.com/myl-dvl",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "adamjstewart",
+      "name": "Adam J. Stewart",
+      "avatar_url": "https://avatars.githubusercontent.com/u/12021217?v=4",
+      "profile": "https://github.com/adamjstewart",
+      "contributions": [
+        "code",
+        "doc"
+      ]
+    },
+    {
+      "login": "khmyznikov",
+      "name": "Gleb Khmyznikov",
+      "avatar_url": "https://avatars.githubusercontent.com/u/6115884?v=4",
+      "profile": "https://khmyznikov.com/",
+      "contributions": [
+        "platform"
+      ]
+    },
+    {
+      "login": "dgburr",
+      "name": "𝖉𝖆𝖓𝖎𝖊𝖑 𝖇𝖚𝖗𝖗",
+      "avatar_url": "https://avatars.githubusercontent.com/u/6092328?v=4",
+      "profile": "https://github.com/dgburr",
+      "contributions": [
+        "bug"
+      ]
     }
   ],
   "contributorsPerLine": 7

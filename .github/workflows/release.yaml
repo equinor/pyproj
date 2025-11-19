@@ -48,7 +48,7 @@ jobs:
           micromamba run -n sdist_env twine check --strict dist/*
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: sdist
           path: ./dist/*.tar.gz
@@ -70,6 +70,10 @@ jobs:
           arch: arm64
           cmake_osx_architectures: arm64
           macos_deployment_target: "14.0"
+        - os: macos-15-intel
+          arch: x86_64
+          cmake_osx_architectures: x86_64
+          macos_deployment_target: "15.0"
         - os: "windows-2022"
           arch: "auto64"
           triplet: "x64-windows"
@@ -133,7 +137,7 @@ jobs:
           cp "$VCPKG_INSTALLATION_ROOT/installed/${{ matrix.triplet }}/share/proj/"* ${GITHUB_WORKSPACE}/pyproj/proj_dir/share/proj/
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.2.0
+        uses: pypa/cibuildwheel@v3.2.1
         env:
           CIBW_ENABLE: cpython-freethreading
           CIBW_ARCHS: ${{ matrix.arch }}
@@ -169,7 +173,7 @@ jobs:
             python -m pytest test -v -s
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: wheels-${{ matrix.os }}-${{ matrix.arch }}
           path: ./wheelhouse/*.whl
@@ -181,11 +185,11 @@ jobs:
     if: ${{ github.repository_owner == 'pyproj4' && github.event_name != 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           name: sdist
           path: dist
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         continue-on-error: ${{ github.event_name == 'push' && github.ref_type != 'tag' }}
         with:
           pattern: wheels-*
