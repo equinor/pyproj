@@ -303,7 +303,8 @@ class TransformerGroup(_TransformerGroup):
             - ``"known_available"``: Only consider operations where all
               required grids are known to be available.
 
-            Default is ``"sort"`` (matches PROJ behavior when network is disabled)."""
+            If not specified, defaults to PROJ's behavior (ignores grid availability).
+        """
         pivot_crs_use, pivot_crs_list = _normalize_pivot_crs_argument(pivot_crs)
         super().__init__(
             CRS.from_user_input(crs_from)._crs,
