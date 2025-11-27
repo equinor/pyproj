@@ -200,3 +200,26 @@ class CRSExtentUse(BaseEnum):
     BOTH = "BOTH"
     INTERSECTION = "INTERSECTION"
     SMALLEST = "SMALLEST"
+
+
+class IntermediateCRSUse(BaseEnum):
+    """
+    .. versionadded:: 3.8.0
+
+    Mirrors the ``--pivot-crs`` modes from the PROJ CLI and controls how
+    intermediate/pivot CRS candidates are considered when building
+    :class:`pyproj.transformer.TransformerGroup` operations.
+
+    Values
+    ------
+    ALWAYS
+        Always search via the provided pivot CRS list (or PROJ defaults).
+    IF_NO_DIRECT_TRANSFORMATION
+        Only fall back to pivots when no direct operation exists.
+    NEVER
+        Do not attempt to use pivot CRS.
+    """
+
+    ALWAYS = "ALWAYS"
+    IF_NO_DIRECT_TRANSFORMATION = "IF_NO_DIRECT_TRANSFORMATION"
+    NEVER = "NEVER"

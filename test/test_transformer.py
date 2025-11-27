@@ -15,7 +15,7 @@ from numpy.testing import assert_almost_equal, assert_array_equal
 import pyproj
 from pyproj import CRS, Proj, Transformer, itransform, transform
 from pyproj.datadir import append_data_dir
-from pyproj.enums import CRSExtentUse, TransformDirection
+from pyproj.enums import CRSExtentUse, IntermediateCRSUse, TransformDirection
 from pyproj.exceptions import ProjError
 from pyproj.transformer import AreaOfInterest, TransformerGroup
 from test.conftest import grids_available, proj_env, proj_network_env
@@ -1615,6 +1615,32 @@ def test_transformer_group_crs_extent_use_smallest_enum():
 def test_transformer_group_crs_extent_use_both_enum():
     group_both = TransformerGroup(4230, 32632, crs_extent_use=CRSExtentUse.BOTH)
     assert len(group_both.transformers) >= 1
+
+
+def test_transformer_group_pivot_crs_mode_never():
+    group = TransformerGroup(4326, 3857, pivot_crs=IntermediateCRSUse.NEVER)
+    assert len(group.transformers) >= 1
+
+
+def test_transformer_group_pivot_crs_string_list():
+    group = TransformerGroup(4230, 4326, pivot_crs="EPSG:4326,EPSG:4979")
+    assert len(group.transformers) >= 1
+
+
+def test_transformer_group_pivot_crs_iterable_codes():
+    group = TransformerGroup(4326, 4979, pivot_crs=["EPSG:4978", 4326])
+    assert len(group.transformers) >= 1
+
+
+def test_transformer_group_pivot_crs_invalid_empty_string():
+    with pytest.raises(ProjError):
+        TransformerGroup(4326, 3857, pivot_crs="  ")
+
+
+def test_transformer_group_pivot_crs_unidentifiable_crs():
+    custom_crs = CRS.from_proj4("+proj=longlat +a=1 +b=1")
+    with pytest.raises(ProjError):
+        TransformerGroup(4326, 3857, pivot_crs=custom_crs)
 
 
 def test_transformer_group_authority_filter():

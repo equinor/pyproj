@@ -22,7 +22,13 @@ from pyproj._crs cimport (
 
 from pyproj._context import _LOGGER, get_context_manager
 from pyproj.aoi import AreaOfInterest
-from pyproj.enums import ProjVersion, TransformDirection, WktVersion, CRSExtentUse
+from pyproj.enums import (
+    ProjVersion,
+    TransformDirection,
+    WktVersion,
+    CRSExtentUse,
+    IntermediateCRSUse,
+)
 from pyproj.exceptions import ProjError
 
 _AUTH_CODE_RE = re.compile(r"(?P<authority>\w+)\:(?P<code>\w+)")
@@ -127,6 +133,8 @@ cdef class _TransformerGroup:
         double accuracy,
         bint allow_superseded,
         crs_extent_use=None,
+        pivot_crs_use=None,
+        pivot_crs_list=None,
     ):
         """
         From PROJ docs:
@@ -145,6 +153,10 @@ cdef class _TransformerGroup:
             PJ* pj_transform = NULL
             PROJ_CRS_EXTENT_USE pj_crs_extent_use
             const char* c_authority = NULL
+            PROJ_INTERMEDIATE_CRS_USE pj_pivot_use
+            Py_ssize_t pivot_len = 0
+            const char** c_pivot_list = NULL
+            Py_ssize_t pivot_idx
             int num_operations = 0
             int is_instantiable = 0
             double west_lon_degree
@@ -205,6 +217,41 @@ cdef class _TransformerGroup:
                 operation_factory_context,
                 PROJ_SPATIAL_CRITERION_PARTIAL_INTERSECTION
             )
+            if pivot_crs_use is not None:
+                if not isinstance(pivot_crs_use, IntermediateCRSUse):
+                    pivot_crs_use = IntermediateCRSUse.create(pivot_crs_use)
+                if pivot_crs_use is IntermediateCRSUse.ALWAYS:
+                    pj_pivot_use = PROJ_INTERMEDIATE_CRS_USE_ALWAYS
+                elif pivot_crs_use is IntermediateCRSUse.IF_NO_DIRECT_TRANSFORMATION:
+                    pj_pivot_use = PROJ_INTERMEDIATE_CRS_USE_IF_NO_DIRECT_TRANSFORMATION
+                else:
+                    pj_pivot_use = PROJ_INTERMEDIATE_CRS_USE_NEVER
+                proj_operation_factory_context_set_allow_use_intermediate_crs(
+                    self.context,
+                    operation_factory_context,
+                    pj_pivot_use,
+                )
+            if pivot_crs_list:
+                pivot_crs_bytes = []
+                for pivot_item in pivot_crs_list:
+                    pivot_crs_bytes.append(cstrencode(pivot_item))
+                pivot_len = len(pivot_crs_bytes)
+                c_pivot_list = <const char**>PyMem_Malloc(
+                    (pivot_len + 1) * sizeof(const char*)
+                )
+                if c_pivot_list == NULL:
+                    raise MemoryError()
+                try:
+                    for pivot_idx in range(pivot_len):
+                        c_pivot_list[pivot_idx] = pivot_crs_bytes[pivot_idx]
+                    c_pivot_list[pivot_len] = NULL
+                    proj_operation_factory_context_set_allowed_intermediate_crs(
+                        self.context,
+                        operation_factory_context,
+                        c_pivot_list,
+                    )
+                finally:
+                    PyMem_Free(<void*>c_pivot_list)
             if crs_extent_use is not None:
                 if not isinstance(crs_extent_use, CRSExtentUse):
                     crs_extent_use = CRSExtentUse.create(crs_extent_use)

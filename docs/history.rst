@@ -8,6 +8,8 @@ Latest
 - ENH: Add :meth:`database.query_geodetic_crs_from_datum` (pull #1390)
 - ENH: Added crs_extent_use kwarg to :class:`pyproj.transformer.TransformerGroup` aligning with PROJ CLI --crs-extent-use
 - ENH: Added :class:`pyproj.enums.CRSExtentUse` enum for TransformerGroup ``crs_extent_use`` kwarg
+- ENH: Added pivot_crs kwarg to :class:`pyproj.transformer.TransformerGroup` mirroring PROJ CLI ``--pivot-crs``
+- ENH: Added :class:`pyproj.enums.IntermediateCRSUse` to support TransformerGroup ``pivot_crs`` kwarg
 - BUG: Clear CONTEXT_THREAD_KEY when destroying PJ_CONTEXT (pull #1541)
 - BUG: Default skew angle for CF grid mapping oblique mercator to 90 (issue #1506)
 
