@@ -10,6 +10,8 @@ Latest
 - ENH: Added :class:`pyproj.enums.CRSExtentUse` enum for TransformerGroup ``crs_extent_use`` kwarg
 - ENH: Added pivot_crs kwarg to :class:`pyproj.transformer.TransformerGroup` mirroring PROJ CLI ``--pivot-crs``
 - ENH: Added :class:`pyproj.enums.IntermediateCRSUse` to support TransformerGroup ``pivot_crs`` kwarg
+- ENH: Added grid_check kwarg to :class:`pyproj.transformer.TransformerGroup` mirroring PROJ CLI ``--grid-check``
+- ENH: Added :class:`pyproj.enums.GridAvailabilityUse` enum for TransformerGroup ``grid_check`` kwarg
 - BUG: Clear CONTEXT_THREAD_KEY when destroying PJ_CONTEXT (pull #1541)
 - BUG: Default skew angle for CF grid mapping oblique mercator to 90 (issue #1506)
 

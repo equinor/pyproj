@@ -28,6 +28,7 @@ from pyproj.enums import (
     WktVersion,
     CRSExtentUse,
     IntermediateCRSUse,
+    GridAvailabilityUse,
 )
 from pyproj.exceptions import ProjError
 
@@ -135,6 +136,7 @@ cdef class _TransformerGroup:
         crs_extent_use=None,
         pivot_crs_use=None,
         pivot_crs_list=None,
+        grid_check=None,
     ):
         """
         From PROJ docs:
@@ -152,6 +154,7 @@ cdef class _TransformerGroup:
             PJ_OBJ_LIST * pj_operations = NULL
             PJ* pj_transform = NULL
             PROJ_CRS_EXTENT_USE pj_crs_extent_use
+            PROJ_GRID_AVAILABILITY_USE pj_grid_availability
             const char* c_authority = NULL
             PROJ_INTERMEDIATE_CRS_USE pj_pivot_use
             Py_ssize_t pivot_len = 0
@@ -207,10 +210,25 @@ cdef class _TransformerGroup:
                 operation_factory_context,
                 not allow_superseded,
             )
+            # Set grid availability if specified
+            if grid_check is not None:
+                if not isinstance(grid_check, GridAvailabilityUse):
+                    grid_check = GridAvailabilityUse.create(grid_check)
+                if grid_check is GridAvailabilityUse.SORT:
+                    pj_grid_availability = PROJ_GRID_AVAILABILITY_USED_FOR_SORTING
+                elif grid_check is GridAvailabilityUse.DISCARD_MISSING:
+                    pj_grid_availability = PROJ_GRID_AVAILABILITY_DISCARD_OPERATION_IF_MISSING_GRID
+                elif grid_check is GridAvailabilityUse.NONE:
+                    pj_grid_availability = PROJ_GRID_AVAILABILITY_IGNORED
+                elif grid_check is GridAvailabilityUse.KNOWN_AVAILABLE:
+                    pj_grid_availability = PROJ_GRID_AVAILABILITY_KNOWN_AVAILABLE
+            else:
+                # Default: use USED_FOR_SORTING (matches PROJ's default when network is disabled)
+                pj_grid_availability = PROJ_GRID_AVAILABILITY_USED_FOR_SORTING
             proj_operation_factory_context_set_grid_availability_use(
                 self.context,
                 operation_factory_context,
-                PROJ_GRID_AVAILABILITY_IGNORED,
+                pj_grid_availability,
             )
             proj_operation_factory_context_set_spatial_criterion(
                 self.context,

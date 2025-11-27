@@ -5,6 +5,7 @@ from typing import Any, NamedTuple
 from pyproj._crs import _CRS, AreaOfUse, Base, CoordinateOperation
 from pyproj.enums import (
     CRSExtentUse,
+    GridAvailabilityUse,
     IntermediateCRSUse,
     ProjVersion,
     TransformDirection,
@@ -47,6 +48,7 @@ class _TransformerGroup:
         crs_extent_use: CRSExtentUse | str | None = None,
         pivot_crs_use: IntermediateCRSUse | str | None = None,
         pivot_crs_list: tuple[str, ...] | None = None,
+        grid_check: GridAvailabilityUse | str | None = None,
     ) -> None: ...
 
 class _Transformer(Base):

@@ -181,16 +181,16 @@ def _normalize_pivot_crs_argument(
                     "pivot_crs string must contain CRS codes or a keyword."
                 ) from err
             normalized = tuple(_coerce_pivot_crs_entry(entry) for entry in entries)
-            return IntermediateCRSUse.ALWAYS, normalized
+            return None, normalized
     if isinstance(pivot_crs, Iterable) and not isinstance(pivot_crs, (str, bytes)):
         normalized_list = tuple(_coerce_pivot_crs_entry(item) for item in pivot_crs)
         if not normalized_list:
             raise ProjError(
                 "pivot_crs iterable must include at least one CRS definition."
             )
-        return IntermediateCRSUse.ALWAYS, normalized_list
+        return None, normalized_list
     normalized_single = (_coerce_pivot_crs_entry(pivot_crs),)
-    return IntermediateCRSUse.ALWAYS, normalized_single
+    return None, normalized_single
 
 
 class TransformerGroup(_TransformerGroup):
@@ -226,14 +226,20 @@ class TransformerGroup(_TransformerGroup):
         | Literal["none", "both", "intersection", "smallest"]
         | None = None,
         pivot_crs: IntermediateCRSUse | CRS | Iterable[str | CRS] | str | None = None,
+        grid_check: Literal[
+            "sort",
+            "discard_missing",
+            "none",
+            "known_available",
+        ]
+        | None = None,
     ) -> None:
         """Get all possible transformations from a :obj:`pyproj.crs.CRS`
         or input used to create one.
 
         .. versionadded:: 3.4.0 authority, accuracy, allow_ballpark
         .. versionadded:: 3.6.0 allow_superseded
-        .. versionadded:: 3.8.0 crs_extent_use
-        .. versionadded:: 3.9.0 pivot_crs
+        .. versionadded:: 3.8.0 crs_extent_use, pivot_crs, grid_check
 
         Parameters
         ----------
@@ -283,8 +289,21 @@ class TransformerGroup(_TransformerGroup):
             (``"AUTH:CODE"`` strings, integers, or :class:`pyproj.crs.CRS`
             objects) to force pivoting through the supplied list. When a list is
             supplied, PROJ is instructed to prefer those pivots.
+        grid_check: Literal["sort",
+            "discard_missing", "none", "known_available"],
+            optional
+            Mirrors the PROJ CLI ``--grid-check`` flag. Controls how grid
+            availability affects candidate operations. Options:
 
-        """
+            - ``"sort"``: Grid availability used for sorting
+              (prefer operations with available grids).
+            - ``"discard_missing"``: Discard operations
+              that reference missing grids.
+            - ``"none"``: Ignore grid availability.
+            - ``"known_available"``: Only consider operations where all
+              required grids are known to be available.
+
+            Default is ``"sort"`` (matches PROJ behavior when network is disabled)."""
         pivot_crs_use, pivot_crs_list = _normalize_pivot_crs_argument(pivot_crs)
         super().__init__(
             CRS.from_user_input(crs_from)._crs,
@@ -298,6 +317,7 @@ class TransformerGroup(_TransformerGroup):
             crs_extent_use=crs_extent_use,
             pivot_crs_use=pivot_crs_use,
             pivot_crs_list=pivot_crs_list,
+            grid_check=grid_check,
         )
         for iii, transformer in enumerate(self._transformers):
             # pylint: disable=unsupported-assignment-operation
