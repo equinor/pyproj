@@ -1,6 +1,7 @@
 import concurrent.futures
 import os
 import pickle
+import subprocess
 from array import array
 from functools import partial
 from glob import glob
@@ -1698,7 +1699,6 @@ def test_transformer_group_grid_availability_none():
     Returns all candidate operations regardless of grid availability.
     For EPSG:4230->4326, returns all operations without filtering by grid availability.
     """
-    import subprocess
 
     # Get projinfo output
     result = subprocess.run(
@@ -1751,7 +1751,6 @@ def test_transformer_group_grid_availability_discard_missing():
     Discards operations requiring missing grids.
     For EPSG:4230->4326, returns only operations with available grids.
     """
-    import subprocess
 
     # Get projinfo output
     result = subprocess.run(
@@ -1805,7 +1804,6 @@ def test_transformer_group_grid_availability_known_available():
     Keeps only operations with grids known to PROJ database.
     For EPSG:4230->4326, filters to operations with known grids.
     """
-    import subprocess
 
     # Get projinfo output
     result = subprocess.run(
@@ -1857,7 +1855,6 @@ def test_transformer_group_grid_availability_sort():
 
     For EPSG:4230->4258 with pivot, ensures proper filtering occurs.
     """
-    import subprocess
 
     # Get projinfo output with pivot
     result = subprocess.run(
@@ -1913,7 +1910,6 @@ def test_transformer_group_grid_availability_with_pivot_discard_missing():
 
     This is the key use case: pivot filtering + grid filtering should work together.
     """
-    import subprocess
 
     # Get projinfo output
     result = subprocess.run(
