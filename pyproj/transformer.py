@@ -82,6 +82,7 @@ class TransformerFromCRS(  # pylint: disable=too-many-instance-attributes
     .. versionadded:: 3.1.0
 
     .. versionadded:: 3.4.0 force_over
+    .. versionadded:: 3.8.0 source_epoch, target_epoch
 
     Generates a Cython _Transformer class from input CRS data.
     """
@@ -95,6 +96,8 @@ class TransformerFromCRS(  # pylint: disable=too-many-instance-attributes
     allow_ballpark: bool | None
     force_over: bool = False
     only_best: bool | None = None
+    source_epoch: float | None = None
+    target_epoch: float | None = None
 
     def __call__(self) -> _Transformer:
         """
@@ -112,6 +115,8 @@ class TransformerFromCRS(  # pylint: disable=too-many-instance-attributes
             allow_ballpark=self.allow_ballpark,
             force_over=self.force_over,
             only_best=self.only_best,
+            source_epoch=self.source_epoch,
+            target_epoch=self.target_epoch,
         )
 
 
@@ -571,6 +576,8 @@ class Transformer:
         allow_ballpark: bool | None = None,
         force_over: bool = False,
         only_best: bool | None = None,
+        source_epoch: float | None = None,
+        target_epoch: float | None = None,
     ) -> "Transformer":
         """Make a Transformer from a :obj:`pyproj.crs.CRS` or input used to create one.
 
@@ -584,6 +591,7 @@ class Transformer:
         .. versionadded:: 3.1.0 authority, accuracy, allow_ballpark
         .. versionadded:: 3.4.0 force_over
         .. versionadded:: 3.5.0 only_best
+        .. versionadded:: 3.8.0 source_epoch, target_epoch
 
         Parameters
         ----------
@@ -627,10 +635,47 @@ class Transformer:
             ``only_best_default`` setting of :ref:`proj-ini`.
             The only_best kwarg overrides the default value if set.
             Requires PROJ 9.2+.
+        source_epoch: float, optional
+            Coordinate epoch of the source CRS, as a decimal year
+            (e.g., 2010.0). Only applies to dynamic CRS that have a
+            velocity model or deformation grid. This is equivalent to
+            the ``--s_epoch`` option in ``cs2cs``.
+
+            This is different from the ``tt`` (time) coordinate in a 4D
+            transformation. The ``source_epoch`` specifies the reference
+            epoch of the CRS definition itself (affecting which velocity
+            model is used), while ``tt`` specifies the observation time
+            of individual coordinate points.
+
+            Requires PROJ 9.4+.
+        target_epoch: float, optional
+            Coordinate epoch of the target CRS, as a decimal year
+            (e.g., 2020.0). Only applies to dynamic CRS that have a
+            velocity model or deformation grid. This is equivalent to
+            the ``--t_epoch`` option in ``cs2cs``.
+
+            See ``source_epoch`` for the distinction between CRS epoch
+            and the ``tt`` time coordinate.
+
+            Requires PROJ 9.4+.
 
         Returns
         -------
         Transformer
+
+        Example
+        -------
+        Perform an epoch shift within NAD83(CSRS)v7::
+
+            >>> from pyproj import Transformer
+            >>> transformer = Transformer.from_crs(
+            ...     "EPSG:8254",  # NAD83(CSRS)v7
+            ...     "EPSG:8254",
+            ...     source_epoch=2010.0,
+            ...     target_epoch=2020.0,
+            ... )
+            >>> lat, lon, h = transformer.transform(45.4215, -75.6972, 100.0)
+            >>> # Height changes by ~21mm due to vertical land motion
 
         """
         return Transformer(
@@ -644,6 +689,8 @@ class Transformer:
                 allow_ballpark=allow_ballpark,
                 force_over=force_over,
                 only_best=only_best,
+                source_epoch=source_epoch,
+                target_epoch=target_epoch,
             )
         )
 

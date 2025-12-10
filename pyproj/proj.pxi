@@ -229,6 +229,7 @@ cdef extern from "proj.h" nogil:
         PJ_TYPE_ENGINEERING_DATUM
         PJ_TYPE_PARAMETRIC_DATUM
         PJ_TYPE_DERIVED_PROJECTED_CRS
+        PJ_TYPE_COORDINATE_METADATA
 
     PJ_TYPE proj_get_type(const PJ *obj)
     const char* proj_get_name(const PJ *obj)
@@ -283,6 +284,11 @@ cdef extern from "proj.h" nogil:
     PJ *proj_crs_get_sub_crs(PJ_CONTEXT *ctx, const PJ *crs, int index)
     PJ *proj_get_source_crs(PJ_CONTEXT *ctx, const PJ *obj)
     PJ *proj_get_target_crs(PJ_CONTEXT *ctx, const PJ *obj)
+
+    # Coordinate Metadata (for CRS epoch support)
+    PJ *proj_coordinate_metadata_create(PJ_CONTEXT *ctx, const PJ *crs,
+                                        double epoch)
+    double proj_coordinate_metadata_get_epoch(PJ_CONTEXT *ctx, const PJ *obj)
 
     ctypedef struct PJ_OBJ_LIST
     PJ_OBJ_LIST *proj_identify(PJ_CONTEXT *ctx,

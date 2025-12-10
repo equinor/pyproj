@@ -302,6 +302,8 @@ cdef PJ* proj_create_crs_to_crs(
     allow_ballpark,
     bint force_over,
     only_best,
+    double source_epoch,
+    double target_epoch,
 ) except NULL:
     """
     This is the same as proj_create_crs_to_crs in proj.h
@@ -309,6 +311,9 @@ cdef PJ* proj_create_crs_to_crs(
     reasons.
 
     Reference: https://github.com/pyproj4/pyproj/pull/800
+
+    Added source_epoch and target_epoch parameters for dynamic CRS support.
+    Use NaN to indicate no epoch specified.
     """
     cdef PJ *source_crs = proj_create(ctx, source_crs_str)
     if source_crs == NULL:
@@ -316,6 +321,7 @@ cdef PJ* proj_create_crs_to_crs(
             "PROJ_DEBUG: proj_create_crs_to_crs: Cannot instantiate source_crs"
         )
         return NULL
+
     cdef PJ *target_crs = proj_create(ctx, target_crs_str)
     if target_crs == NULL:
         proj_destroy(source_crs)
@@ -323,6 +329,36 @@ cdef PJ* proj_create_crs_to_crs(
             "PROJ_DEBUG: proj_create_crs_to_crs: Cannot instantiate target_crs"
         )
         return NULL
+
+    # Wrap source CRS with epoch metadata if specified
+    cdef PJ *source_crs_with_epoch = NULL
+    if source_epoch == source_epoch:  # Check for NaN (NaN != NaN)
+        source_crs_with_epoch = proj_coordinate_metadata_create(
+            ctx, source_crs, source_epoch
+        )
+        proj_destroy(source_crs)
+        if source_crs_with_epoch == NULL:
+            proj_destroy(target_crs)
+            raise ProjError(
+                "Error creating source CRS with epoch. "
+                "Ensure the CRS is dynamic (not static)."
+            )
+        source_crs = source_crs_with_epoch
+
+    # Wrap target CRS with epoch metadata if specified
+    cdef PJ *target_crs_with_epoch = NULL
+    if target_epoch == target_epoch:  # Check for NaN (NaN != NaN)
+        target_crs_with_epoch = proj_coordinate_metadata_create(
+            ctx, target_crs, target_epoch
+        )
+        proj_destroy(target_crs)
+        if target_crs_with_epoch == NULL:
+            proj_destroy(source_crs)
+            raise ProjError(
+                "Error creating target CRS with epoch. "
+                "Ensure the CRS is dynamic (not static)."
+            )
+        target_crs = target_crs_with_epoch
 
     cdef:
         const char* options[6]
@@ -556,9 +592,13 @@ cdef class _Transformer(Base):
         allow_ballpark=None,
         bint force_over=False,
         only_best=None,
+        source_epoch=None,
+        target_epoch=None,
     ):
         """
-        Create a transformer from CRS objects
+        Create a transformer from CRS objects.
+
+        source_epoch and target_epoch are decimal years for dynamic CRS support.
         """
         cdef:
             PJ_AREA *pj_area_of_interest = NULL
@@ -567,6 +607,14 @@ cdef class _Transformer(Base):
             double east_lon_degree
             double north_lat_degree
             _Transformer transformer = _Transformer()
+            double c_source_epoch = float('nan')
+            double c_target_epoch = float('nan')
+
+        # Convert epoch parameters to C doubles (NaN if not specified)
+        if source_epoch is not None:
+            c_source_epoch = float(source_epoch)
+        if target_epoch is not None:
+            c_target_epoch = float(target_epoch)
 
         try:
             if area_of_interest is not None:
@@ -599,6 +647,8 @@ cdef class _Transformer(Base):
                 allow_ballpark=allow_ballpark,
                 force_over=force_over,
                 only_best=only_best,
+                source_epoch=c_source_epoch,
+                target_epoch=c_target_epoch,
             )
         finally:
             if pj_area_of_interest != NULL:

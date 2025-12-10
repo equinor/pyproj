@@ -22,6 +22,7 @@ GitHub Repository: https://github.com/pyproj4/pyproj
    installation
    examples
    transformation_grids
+   coordinate_epochs
    gotchas
    api/index
    cli

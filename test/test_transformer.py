@@ -1677,3 +1677,163 @@ def test_transformer__get_last_used_operation():
     operation = transformer.get_last_used_operation()
     assert isinstance(operation, Transformer)
     assert xxx, yyy == operation.transform(1, 2)
+
+
+# ============================================================================
+# Coordinate Epoch Tests
+# ============================================================================
+
+
+@pytest.mark.grid
+def test_transformer_epoch_nad83csrsv7():
+    """Test epoch transformation within NAD83(CSRS)v7 dynamic CRS.
+
+    This tests the source_epoch and target_epoch parameters which allow
+    transforming coordinates between different epochs within a dynamic
+    reference frame using velocity grids.
+
+    Reference: cs2cs EPSG:8254 EPSG:8254 --s_epoch 2010 --t_epoch 2020
+    Input: 45.4215 -75.6972 100
+    Output: 45.4214998264 -75.6971997527 100.0208920585
+    """
+    if not grids_available("ca_nrc_NAD83v70VG.tif"):
+        pytest.skip("NAD83(CSRS)v7 velocity grid not available")
+
+    transformer = Transformer.from_crs(
+        "EPSG:8254",  # NAD83(CSRS)v7
+        "EPSG:8254",
+        source_epoch=2010.0,
+        target_epoch=2020.0,
+    )
+
+    # Ottawa coordinates
+    lat_out, lon_out, h_out = transformer.transform(45.4215, -75.6972, 100.0)
+
+    # Compare with cs2cs reference values (tolerance for floating point)
+    assert_almost_equal(lat_out, 45.4214998264, decimal=8)
+    assert_almost_equal(lon_out, -75.6971997527, decimal=8)
+    assert_almost_equal(h_out, 100.0208920585, decimal=6)
+
+
+@pytest.mark.grid
+def test_transformer_epoch_reverse():
+    """Test epoch transformation in reverse direction."""
+    if not grids_available("ca_nrc_NAD83v70VG.tif"):
+        pytest.skip("NAD83(CSRS)v7 velocity grid not available")
+
+    # Forward: 2010 -> 2020
+    transformer_fwd = Transformer.from_crs(
+        "EPSG:8254",
+        "EPSG:8254",
+        source_epoch=2010.0,
+        target_epoch=2020.0,
+    )
+
+    # Reverse: 2020 -> 2010
+    transformer_rev = Transformer.from_crs(
+        "EPSG:8254",
+        "EPSG:8254",
+        source_epoch=2020.0,
+        target_epoch=2010.0,
+    )
+
+    original = (45.4215, -75.6972, 100.0)
+
+    # Forward then reverse should give original coordinates
+    intermediate = transformer_fwd.transform(*original)
+    roundtrip = transformer_rev.transform(*intermediate)
+
+    assert_almost_equal(roundtrip[0], original[0], decimal=10)
+    assert_almost_equal(roundtrip[1], original[1], decimal=10)
+    assert_almost_equal(roundtrip[2], original[2], decimal=6)
+
+
+def test_transformer_epoch_static_crs_noop():
+    """Test that epoch with static CRS results in no-op transformation.
+
+    For static CRS like WGS84, epochs don't affect the transformation
+    because there's no time-dependent component.
+    """
+    transformer = Transformer.from_crs(
+        "EPSG:4326",  # WGS84 - static CRS
+        "EPSG:4326",
+        source_epoch=2010.0,
+        target_epoch=2020.0,
+    )
+
+    lat_in, lon_in = 45.0, -75.0
+    lat_out, lon_out = transformer.transform(lat_in, lon_in)
+
+    # Static CRS should return unchanged coordinates
+    assert_almost_equal(lat_out, lat_in, decimal=10)
+    assert_almost_equal(lon_out, lon_in, decimal=10)
+
+
+def test_transformer_epoch_source_only():
+    """Test specifying only source_epoch."""
+    if not grids_available("ca_nrc_NAD83v70VG.tif"):
+        pytest.skip("NAD83(CSRS)v7 velocity grid not available")
+
+    # Only source epoch - this should work (target defaults to anchor epoch)
+    transformer = Transformer.from_crs(
+        "EPSG:8254",
+        "EPSG:8254",
+        source_epoch=2015.0,
+    )
+
+    lat_out, lon_out, h_out = transformer.transform(45.4215, -75.6972, 100.0)
+    # Should get some result (not testing exact values since
+    # target epoch behavior may vary)
+    assert lat_out is not None
+    assert lon_out is not None
+
+
+def test_transformer_epoch_target_only():
+    """Test specifying only target_epoch."""
+    if not grids_available("ca_nrc_NAD83v70VG.tif"):
+        pytest.skip("NAD83(CSRS)v7 velocity grid not available")
+
+    # Only target epoch - this should work
+    transformer = Transformer.from_crs(
+        "EPSG:8254",
+        "EPSG:8254",
+        target_epoch=2015.0,
+    )
+
+    lat_out, lon_out, h_out = transformer.transform(45.4215, -75.6972, 100.0)
+    assert lat_out is not None
+    assert lon_out is not None
+
+
+def test_transformer_epoch_backward_compatibility():
+    """Test that existing code without epochs still works."""
+    transformer = Transformer.from_crs("EPSG:4326", "EPSG:32618")
+
+    # Standard transformation without epochs
+    x, y = transformer.transform(45.0, -75.0)
+
+    assert x is not None
+    assert y is not None
+    # UTM zone 18N coordinates for this point
+    assert_almost_equal(x, 500000.0, decimal=-3)  # Near central meridian
+
+
+@pytest.mark.grid
+def test_transformer_epoch_with_other_params():
+    """Test that epoch parameters work alongside other parameters."""
+    if not grids_available("ca_nrc_NAD83v70VG.tif"):
+        pytest.skip("NAD83(CSRS)v7 velocity grid not available")
+
+    transformer = Transformer.from_crs(
+        "EPSG:8254",
+        "EPSG:8254",
+        always_xy=True,
+        source_epoch=2010.0,
+        target_epoch=2020.0,
+    )
+
+    # With always_xy=True, input is (lon, lat) not (lat, lon)
+    lon_out, lat_out, h_out = transformer.transform(-75.6972, 45.4215, 100.0)
+
+    assert_almost_equal(lat_out, 45.4214998264, decimal=8)
+    assert_almost_equal(lon_out, -75.6971997527, decimal=8)
