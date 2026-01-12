@@ -32,7 +32,7 @@ jobs:
           environment-name: sdist_env
           create-args: >-
             python-build
-            twine
+            "twine>=1.12"
             cython
             proj=${{ matrix.proj-version }}
 
