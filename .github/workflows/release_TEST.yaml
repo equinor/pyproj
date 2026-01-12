@@ -29,7 +29,7 @@ jobs:
             python-build
             "twine>=1.12"
             cython
-            proj=${{ matrix.proj-version }}
+            proj=${{ env.PROJ_VERSION }}
 
 
       - name: Make sdist
