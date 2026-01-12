@@ -27,7 +27,7 @@ jobs:
           environment-name: sdist_env
           create-args: >-
             python-build
-            "twine>=1.12"
+            twine>=1.12
             cython
             proj=${{ env.PROJ_VERSION }}
 
